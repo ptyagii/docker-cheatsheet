@@ -8,90 +8,6 @@ Docker is a software container platform and this is designed to make it easier t
 
 A container is an instance of an image and pull only downloads the image, it doesn't create a container. 
 
-### Starting and Stopping
-
-* [`docker start`](https://docs.docker.com/engine/reference/commandline/start) starts a container so it is running.
-* [`docker stop`](https://docs.docker.com/engine/reference/commandline/stop) stops a running container.
-* [`docker restart`](https://docs.docker.com/engine/reference/commandline/restart) stops and starts a container.
-* [`docker pause`](https://docs.docker.com/engine/reference/commandline/pause/) pauses a running container, "freezing" it in place.
-* [`docker unpause`](https://docs.docker.com/engine/reference/commandline/unpause/) will unpause a running container.
-* [`docker wait`](https://docs.docker.com/engine/reference/commandline/wait) blocks until running container stops.
-* [`docker kill`](https://docs.docker.com/engine/reference/commandline/kill) sends a SIGKILL to a running container.
-* [`docker attach`](https://docs.docker.com/engine/reference/commandline/attach) will connect to a running container.
-
-If you want to expose container ports through the host, see the [exposing ports](#exposing-ports) section.
-
-Restart policies on crashed docker instances are [covered here](http://container42.com/2014/09/30/docker-restart-policies/).
-
-#### CPU Constraints
-
-You can limit CPU, either using a percentage of all CPUs, or by using specific cores.  
-
-For example, you can tell the [`cpu-shares`](https://docs.docker.com/engine/reference/run/#/cpu-share-constraint) setting.  
-```
-docker run -ti --c 512 agileek/cpuset-test
-```
-
-You can also only use some CPU cores using [`cpuset-cpus`](https://docs.docker.com/engine/reference/run/#/cpuset-constraint).  
-
-```
-docker run -ti --cpuset-cpus=0,4,6 agileek/cpuset-test
-```
-
-#### Memory Constraints
-
-You can also set [memory constraints](https://docs.docker.com/engine/reference/run/#/user-memory-constraints) on Docker:
-
-```
-docker run -it -m 300M ubuntu:14.04 /bin/bash
-```
-
-#### Capabilities
-
-Linux capabilities can be set by using `cap-add` and `cap-drop`.  See https://docs.docker.com/engine/reference/run/#/runtime-privilege-and-linux-capabilities for details.  This should be used for greater security.
-
-To mount a FUSE based filesystem, you need to combine both --cap-add and --device:
-
-```
-docker run --rm -it --cap-add SYS_ADMIN --device /dev/fuse sshfs
-```
-
-Give access to a single device:
-
-```
-docker run -it --device=/dev/ttyUSB0 debian bash
-```
-
-Give access to all devices:
-
-```
-docker run -it --privileged -v /dev/bus/usb:/dev/bus/usb debian bash
-```
-
-more info about privileged containers [here](
-https://docs.docker.com/engine/reference/run/#/runtime-privilege-and-linux-capabilities)
-
-
-### Info
-
-* [`docker ps`](https://docs.docker.com/engine/reference/commandline/ps) shows running containers.
-* [`docker logs`](https://docs.docker.com/engine/reference/commandline/logs) gets logs from container.  (You can use a custom log driver, but logs is only available for `json-file` and `journald` in 1.10).
-* [`docker inspect`](https://docs.docker.com/engine/reference/commandline/inspect) looks at all the info on a container (including IP address).
-* [`docker events`](https://docs.docker.com/engine/reference/commandline/events) gets events from container.
-* [`docker port`](https://docs.docker.com/engine/reference/commandline/port) shows public facing port of container.
-* [`docker top`](https://docs.docker.com/engine/reference/commandline/top) shows running processes in container.
-* [`docker stats`](https://docs.docker.com/engine/reference/commandline/stats) shows containers' resource usage statistics.
-* [`docker diff`](https://docs.docker.com/engine/reference/commandline/diff) shows changed files in the container's FS.
-
-`docker ps -a` shows running and stopped containers.
-
-`docker stats --all` shows a running list of containers.
-
-### Import / Export
-
-* [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp) copies files or folders between a container and the local filesystem.
-* [`docker export`](https://docs.docker.com/engine/reference/commandline/export) turns container filesystem into tarball archive stream to STDOUT.
-
 ### Executing Commands
 
 * [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec) to execute a command in container.
@@ -101,11 +17,6 @@ To enter a running container, attach a new shell process to a running container 
 ## Images
 
 An image is an inert, immutable, file that’s a snapshot of a container. Images are created with the build command, and they’ll produce a container when started with run and these are stored in a Docker registry such as registry.hub.docker.com. 
-
-### Info
-
-* [`docker history`](https://docs.docker.com/engine/reference/commandline/history) shows history of image.
-* [`docker tag`](https://docs.docker.com/engine/reference/commandline/tag) tags an image to a name (local or registry).
 
 ### Cleaning up
 
@@ -135,11 +46,6 @@ Export an existing container:
 docker export my_container | gzip > my_container.tar.gz
 ```
 
-### Difference between loading a saved image and importing an exported container as an image
-
-Loading an image using the `load` command creates a new image including its history.  
-Importing a container as an image using the `import` command creates a new image excluding the history which results in a smaller image size compared to loading an image.
-
 ## Networks
 
 Docker has a [networks](https://docs.docker.com/engine/userguide/networking/) feature. 
@@ -155,15 +61,103 @@ Sources:
 * [15 Docker Tips in 5 minutes](http://sssslide.com/speakerdeck.com/bmorearty/15-docker-tips-in-5-minutes)
 * [CodeFresh Everyday Hacks Docker](https://codefresh.io/blog/everyday-hacks-docker/)
 
-### Prune
+### Set Up
 
-The new [Data Management Commands](https://github.com/docker/docker/pull/26108) have landed as of Docker 1.13:
+`docker pull ubuntu` pulls a base image.
 
-* `docker system prune`
-* `docker volume prune`
-* `docker network prune`
-* `docker container prune`
-* `docker image prune`
+`alias dl='docker ps -l -q'` to get the id of the last-run container, you can set alias.
+
+### Create a container 
+
+`docker run -d ubuntu /bin/sh -c "while true; do echo hello world; sleep 1; done"`
+
+### Stop a container 
+
+~~~
+docker stop `dl` 
+~~~
+
+### Start a container
+~~~
+docker start `dl` 
+~~~
+
+### Restart a container 
+~~~
+docker restart `dl` 
+~~~
+
+### Connect to a running Container
+~~~
+docker attach `dl` 
+~~~
+
+### Copy file in a Container to the host
+
+`docker cp `dl`:/etc/passwd`
+
+### Mount the directory in host to a Container 
+
+`docker run -v /home/vagrant/test:/root/test ubuntu echo yo`
+
+### Delete a Container.
+~~~
+dockr rm `dl` 
+~~~
+
+### Show running Containers; where -a option shows running and stopped Containers.
+
+`docker ps`
+
+### Show Container information like IP adress
+~~~
+docker inspect `dl` 
+~~~
+
+### Show log of a Container
+~~~
+docker logs `dl` 
+~~~
+
+### Show running process in a Container
+~~~
+docker top `dl` 
+~~~
+
+### Create a image from a Container
+
+`docker run -d ubuntu /bin/sh -c "apt-get install -y hello"
+docker commit -m "My first container" `dl` test/hello`
+
+### Create a image with Dockerfile
+
+`echo -e "FROM base\nRUN apt-get install hello\nCMD hello" > Dockerfile
+docker build tcnksm/hello .`
+
+### login to a image 
+
+`docker run -rm -t -i test/hello /bin/bash`
+
+### Push a imges to remote repository.  
+
+`docker login
+docker push test/hello`
+
+### Delete a image
+
+`docker rmi test/hello` 
+
+### Show all images
+
+`docker images`
+
+### Show image information like IP adress
+
+`docker inspect test/hello`
+
+### Show command history of a image
+
+`docker history test/hello`
 
 ### df 
 
